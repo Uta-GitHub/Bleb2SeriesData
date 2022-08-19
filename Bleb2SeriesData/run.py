@@ -44,7 +44,7 @@ def main(path, save_dir, closed_iterations, color="white", threshold=85, cytopla
     #print(x_g, y_g)
     g = np.array([x_g, y_g])
     each_r, each_theta, all_r, all_r_mean, each_r_cell, each_theta_cell, all_cell_r, all_cell_r_mean = \
-    contour_interpolation(contours, cell_contours, g, save_dir=save_dir, n_conv=25)
+    contour_regression(contours, cell_contours, g, save_dir=save_dir, degree=40, n_conv=25)#contour_interpolation(contours, cell_contours, g, save_dir=save_dir, n_conv=25)
     
     axs = theta2xy(all_r_mean, each_theta) ###
     axs_cell = theta2xy(all_cell_r_mean, each_theta_cell)###
@@ -63,7 +63,7 @@ def main(path, save_dir, closed_iterations, color="white", threshold=85, cytopla
     peaks, _ = signal.find_peaks(slided_rs, distance=20)
     bleb_area, rel_mins, peaks = get_bleb_areas(slided_rs, peaks)
     slided_bleb_area = bleb_area
-    peaks, bleb_area = slided_again(peaks, argmin, l=len(all_r), bleb_area=bleb_area) 
+    peaks, bleb_area = slided_again(peaks, argmin, l=len(all_r), bleb_area=bleb_area)  ######## !!! peaksが－
     #print((bleb_area/area*100))
     #print(peaks)
     bleb_idx = (bleb_area/ area*100) >= not_bleb_area # 一定の割合以下のものはブレブでないとみなし、除く.    
