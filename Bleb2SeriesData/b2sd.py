@@ -218,11 +218,11 @@ def contour_interpolation(contours, cell_contours, g, save_dir, n_conv=25, mean_
     # 移動平均を出す
     b = np.ones(n_conv)/n_conv
     tmp = all_r
-    
-    for _ in range(mean_iter):
-        all_r_padded = np.concatenate((tmp[-20:], tmp, tmp[:20]))
-        all_r_mean = np.convolve(all_r_padded, b, mode="same")[20:-20]
-    
+    window_size = [20, 20]
+    for w in window_size:
+        all_r_padded = np.concatenate((tmp[-w:], tmp, tmp[:w]))
+        all_r_mean = np.convolve(all_r_padded, b, mode="same")[w:-w]
+        tmp = all_r_mean
     #all_cell_r_padded = np.concatenate((all_cell_r[-20:], all_cell_r, all_cell_r[:20]))
     #all_cell_r_mean = np.convolve(all_cell_r_padded, b, mode="same")[20:-20]
     cell_tmp = all_cell_r

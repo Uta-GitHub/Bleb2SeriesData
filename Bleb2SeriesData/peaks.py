@@ -13,26 +13,7 @@ import scipy
 from scipy.signal import chirp, find_peaks, peak_widths, peak_prominences
 from Bleb2SeriesData.b2sd import *
 
-def peaks2ax(peaks, each_r, each_theta, total_length=760):
-    """scipy.signal関連のpeaksを座標に変換"""
-    r_1, r_2, r_3, r_4 = [], [], [], []
-    t_1, t_2, t_3, t_4 = [], [], [], []
-    rs = [r_1, r_2, r_3, r_4]
-    thetas = [t_1, t_2, t_3, t_4]
-    each_length = int(total_length/4) #各象限の長さ
-    for p in peaks:
-        for i in range(4):
-            if i*each_length <= p < (i+1)*each_length:
-                print(i, p)
-                r = each_r[i][p-i*each_length]
-                theta = each_theta[i][p-i*each_length]
-                rs[i].append(r)
-                thetas[i].append(theta)
-                
-    
-    peak_axs = theta2xy(rs, thetas)
-    
-    return peak_axs
+
 
 def slide_argmin(r):
     argmin = np.argmin(r)
@@ -67,7 +48,7 @@ def slided_again(peaks, argmin, l, bleb_area):
 
 def peaks2ax(peaks, each_r, each_theta, total_length=760):
     """scipy.signal関連のpeaksを座標に変換"""
-    #print("peaks", peaks)
+    print("peaks", peaks)
     r_1, r_2, r_3, r_4 = [], [], [], []
     t_1, t_2, t_3, t_4 = [], [], [], []
     rs = [r_1, r_2, r_3, r_4]
