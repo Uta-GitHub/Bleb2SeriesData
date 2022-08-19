@@ -32,14 +32,17 @@ def load_image(path, save_dir):
     plt.show()
     return img, img_gray
     
-def binarization_and_closed(img_gray, save_dir, closed_iterations=2):   # binarization
-    q75, q85 = np.percentile(img_gray.ravel(), [75, 85])
+def binarization_and_closed(img_gray, save_dir, closed_iterations=2, threshold=85):
+    """
+    threshold: Percentiles must be in the range [0, 100]
+    """# binarization
+    q75, q85, qthreshold = np.percentile(img_gray.ravel(), [75, 85, threshold])
     ns, bins, *_ = plt.hist(img_gray.ravel())
-    plt.vlines(q85, ymin=0, ymax=np.max(ns), colors="red")
+    plt.vlines(qthreshold, ymin=0, ymax=np.max(ns), colors="red")
     #plt.text(q85+5, np.mean(ns), s="q 85")
     plt.savefig(save_dir+"hist")
     
-    ret, img_thresh = cv2.threshold(img_gray, q85, 255, cv2.THRESH_BINARY)
+    ret, img_thresh = cv2.threshold(img_gray, qthreshold, 255, cv2.THRESH_BINARY)
     
     
     # closed
@@ -103,7 +106,8 @@ def find_g(original_img, cell_contours, save_dir):
     
     return x_g_cell, y_g_cell
 ### plot
-def plot_thetas_rs(rs, labels, fig_title, save_dir, l=190):
+def plot_thetas_rs(rs, labels, fig_title, save_dir):
+    l = int(len(rs[0])/4)
     plt.figure(figsize=(20,8))
     plt.title(fig_title)
     for r, label in zip(rs, labels):
