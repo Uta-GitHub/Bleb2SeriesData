@@ -13,6 +13,7 @@ sys.path.append("../Bleb2SeriesData/")
 import numpy as np
 import scipy.signal as signal
 from scipy.signal import chirp, find_peaks, peak_widths, peak_prominences
+from scipy import signal, interpolate
 import scipy
 import sklearn
 from sklearn.linear_model import LinearRegression
@@ -151,15 +152,101 @@ def contour_regression(contours, cell_contours, g, save_dir, degree=40, n_conv=2
     
     return each_r, each_theta, all_r,all_r_mean, each_r_cell, each_theta_cell, all_cell_r, all_cell_r_mean
     
+    
+
+
+def contour_interpolation(contours, cell_contours, g, save_dir, n_conv=25, mean_iter=2):
+    sorted_c, thetas, ls = xy2theta(contours, g)
+    sorted_cell_c, thetas_cell, ls_cell = xy2theta(cell_contours, g)
+    
+    all_r = []
+    each_r = []
+    each_theta = []
+    ind_s = 0
+    for i in range(4):
+        rs = cal_rs(sorted_c[i], g)
+        theta = thetas[i]
+        
+        #print(int(ls[i]), np.array(thetas[i]).shape, np.array(rs).shape)
+        #print(np.unique(np.array(theta)).shape, len(theta))
+        
+        
+        if len(np.unique(theta)) != len(theta):# 重複を削除する
+            u, ind = np.unique(theta, return_index=True)
+            ind_sorted = np.sort(ind)
+            theta = theta[ind_sorted]
+            rs = np.array(rs)[ind_sorted]
+        
+        inp = interpolate.interp1d(theta, rs, kind="quadratic")
+        ind_s = ls[i]
+        if i%2!=0: new_theta = np.linspace(-np.pi/2, 0, 200)[5:-5] # indexが1,3なので,2,4象限であることに注意！
+        elif i%2==0: new_theta = np.linspace(0, np.pi/2, 200)[5:-5] # indexが0,2なので1,3象限であることに注意！！
+        
+        rs_inp = inp(new_theta)
+        all_r.extend(rs_inp.tolist())
+        each_r.append(rs_inp.tolist())
+        each_theta.append(new_theta)
+    
+    each_r_cell = []
+    each_theta_cell = []
+    all_cell_r = []
+    ind_s = 0
+    
+    for i in range(4):
+        rs_cell = cal_rs(sorted_cell_c[i], g)
+        theta_cell = thetas_cell[i]
+
+        if len(np.unique(theta_cell)) != len(theta_cell):# 重複を削除する
+            u, ind = np.unique(theta_cell, return_index=True)
+            ind_sorted = np.sort(ind)
+            theta_cell = theta_cell[ind_sorted]
+            
+            rs_cell = np.array(rs_cell)[ind_sorted]
+        inp = interpolate.interp1d(theta_cell, rs_cell, kind="quadratic")
+        ind_s = ls_cell[i]
+        
+        if i%2!=0: new_theta_cell = np.linspace(-np.pi/2, 0, 200)[5:-5] # indexが1,3なので,2,4象限であることに注意！
+        elif i%2==0: new_theta_cell = np.linspace(0, np.pi/2, 200)[5:-5] # indexが0,2なので1,3象限であることに注意！！
+
+        rs_inp = inp(new_theta_cell)
+        
+        all_cell_r.extend(rs_inp.tolist())
+        each_r_cell.append(rs_inp.tolist()) #####
+        each_theta_cell.append(new_theta_cell)####
+        
+    
+    # 移動平均を出す
+    b = np.ones(n_conv)/n_conv
+    tmp = all_r
+    
+    for _ in range(mean_iter):
+        all_r_padded = np.concatenate((tmp[-20:], tmp, tmp[:20]))
+        all_r_mean = np.convolve(all_r_padded, b, mode="same")[20:-20]
+    
+    #all_cell_r_padded = np.concatenate((all_cell_r[-20:], all_cell_r, all_cell_r[:20]))
+    #all_cell_r_mean = np.convolve(all_cell_r_padded, b, mode="same")[20:-20]
+    cell_tmp = all_cell_r
+    for _ in range(mean_iter):
+        all_cell_r_padded = np.concatenate((cell_tmp[-20:], cell_tmp, cell_tmp[:20]))
+        all_cell_r_mean = np.convolve(all_cell_r_padded, b, mode="same")[20:-20]
+        cell_tmp = all_cell_r_mean
+    
+    
+    # plot
+    plot_thetas_rs([all_r, all_r_mean], ["reg", "mean"], fig_title="bleb_contours_series", save_dir=save_dir)
+    plot_thetas_rs([all_r_mean, all_cell_r_mean], ["mean", "cell body mean"], fig_title="bleb_cell_contours", save_dir=save_dir)
+    
+    return each_r, each_theta, all_r,all_r_mean, each_r_cell, each_theta_cell, all_cell_r, all_cell_r_mean
+    
+    
 ## 画像に戻す
 
-def theta2xy(each_r, each_theta):
+def old_theta2xy(each_r, each_theta):
     """r,theta(極座標）からxy座標に変換"""
     axs = []
     for i in range(4):#象限ごとに戻す 
         r = each_r[i]
         theta = each_theta[i]
-        
         if i==0 or i==3: # 1,4象限 
             x = r*np.cos(theta)
             y = r*np.sin(theta)
@@ -177,4 +264,33 @@ def theta2xy(each_r, each_theta):
     axs = np.array(axs)[:, np.newaxis, :] # contoursのshapeに合わせる(N, 1, 2)
     axs = axs.astype(np.int32)
     return  axs
+    
+def theta2xy(all_r_mean, each_theta):
+    """r,theta(極座標）からxy座標に変換"""
+    #print(len(all_r_mean))
+    l = int(len(all_r_mean)/4)
+    
+    
+    axs = []
+    for i in range(4):#象限ごとに戻す 
+        each_r_mean = all_r_mean[l*i : l*(i+1)]
+        r = each_r_mean
+        theta = each_theta[i]
+        #print("len",len(r), len(theta))
+        if i==0 or i==3: # 1,4象限 
+            x = r*np.cos(theta)
+            y = r*np.sin(theta)
+            
+        elif i==1 or i==2: # 2,3象限 
+            x = r*np.cos(theta)
+            y = r*np.sin(theta)
+            
+            x = -x
+            y = -y
         
+        ax = np.c_[x,y]
+        
+        axs.extend(ax)
+    axs = np.array(axs)[:, np.newaxis, :] # contoursのshapeに合わせる(N, 1, 2)
+    axs = axs.astype(np.int32)
+    return  axs
