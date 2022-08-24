@@ -64,7 +64,7 @@ def binarization_and_closed(img_gray, save_dir, closed_iterations=2, threshold=8
     
 ### find contours ###
 
-def find_contours(original_img, img_thresh, save_dir):
+def find_contours(original_img, img_thresh, save_dir, plot=True):
     contours, _ = cv2.findContours(img_thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
     sorted_idx = np.argsort([len(arr) for arr in contours])
     img_tmp = original_img.copy()
@@ -74,35 +74,37 @@ def find_contours(original_img, img_thresh, save_dir):
     cell_output = cv2.drawContours(img_tmp, contours[sorted_idx[-2]], -1, (0,255,0), 3)
     
 
+    if plot:
+        # plot
+        fig = plt.figure(figsize=(10,8))
+        ax = fig.add_subplot(121)
+        ax.imshow(output)
+        ax.axis('off')
+        ax.set_title("Contours")
     
-    # plot
-    fig = plt.figure(figsize=(10,8))
-    ax = fig.add_subplot(121)
-    ax.imshow(output)
-    ax.axis('off')
-    ax.set_title("Contours")
-    
-    ax = fig.add_subplot(122)
-    ax.imshow(cell_output)
-    ax.set_title("Cell Body Contours")
-    plt.savefig(save_dir+"Contours")
+        ax = fig.add_subplot(122)
+        ax.imshow(cell_output)
+        ax.set_title("Cell Body Contours")
+        plt.savefig(save_dir+"Contours")
+        plt.show()
     
     return contours[sorted_idx[-1]], contours[sorted_idx[-2]]
     
     
-def find_g(original_img, cell_contours, save_dir):
+def find_g(original_img, cell_contours, save_dir, plot=True):
     cell_body = np.zeros((original_img.shape[0], original_img.shape[1]), dtype=np.uint8)
     cell_body = cv2.fillPoly(cell_body, cell_contours, 255)
-    
     mu = cv2.moments(cell_body)
+    
     x_g_cell, y_g_cell = int(mu["m10"]/mu["m00"]), int(mu["m01"]/mu["m00"])
     
     # plot
     img_tmp = original_img.copy()
     img_circle = cv2.circle(img_tmp, (x_g_cell,y_g_cell), radius=3, color=(255,0,0), thickness=-1)
-    plt.figure(figsize=(8,8))
-    plt.imshow(img_circle)
-    plt.savefig(save_dir+"g")
+    if plot:
+        plt.figure(figsize=(8,8))
+        plt.imshow(img_circle)
+        plt.savefig(save_dir+"g")
     
     return x_g_cell, y_g_cell
 ### plot
@@ -138,7 +140,7 @@ def plot_peaks(rs, peaks, save_dir, fig_title="peaks"):
     plt.savefig(save_dir+fig_title)
     
     
-def plot_peaks_img(original_img, peak_axs, g, bleb_area, area, save_dir, with_area=True, color="white", fig_title="area_of_each_bleb"):
+def plot_peaks_img(original_img, peak_axs, g, bleb_area, area, save_dir=None, with_area=True, color="white", fig_title="area_of_each_bleb"):
     if with_area:
         img_tmp = original_img.copy()
         output = cv2.drawContours(img_tmp, peak_axs+g, -1, (255, 125 , 0), 2)
@@ -157,7 +159,8 @@ def plot_peaks_img(original_img, peak_axs, g, bleb_area, area, save_dir, with_ar
         plt.title(f"detect {len(peak_axs)} blebs")
         plt.axis('off')
         
-    plt.savefig(save_dir+fig_title)
+    if save_dir:
+        plt.savefig(save_dir+fig_title)
 
 def plot_series(r_consider_baseline, slided_rs, peaks, rel_mins, save_dir):
     plt.figure(figsize=(20,8))
@@ -167,6 +170,7 @@ def plot_series(r_consider_baseline, slided_rs, peaks, rel_mins, save_dir):
     plt.legend()
     plt.vlines(x=rel_mins, ymin=np.min(slided_rs), ymax=slided_rs[rel_mins], color="red", linestyle="--")
     plt.savefig(save_dir+"series")
+    
     
     
 ## Shape characteristics

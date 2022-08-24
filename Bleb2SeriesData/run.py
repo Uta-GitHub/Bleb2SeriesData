@@ -2,6 +2,8 @@
 """
 Created on Sat July 30 16:10:23 2022
 
+Edited on Wed August 24 11:25:56 2022
+
 @author: Yuta Takahashi
 """
 
@@ -9,6 +11,7 @@ import os
 import datetime
 import sys
 import numpy as np
+
 import matplotlib.pyplot as plt
 sys.path.append("../Bleb2SeriesData/")
 
@@ -19,7 +22,7 @@ from Bleb2SeriesData.peaks import *
 
 
 
-def main(path, save_dir, closed_iterations, color="white", threshold=85, cytoplasmic_region=None, not_bleb_area=1):
+def main(path, save_dir, closed_iterations, color="white", threshold=85, cytoplasmic_region=None, not_bleb_area=2):
     os.makedirs(save_dir, exist_ok=True)
     img, img_gray = load_image(path, save_dir)
     img_thresh = binarization_and_closed(img_gray, save_dir, closed_iterations=closed_iterations, threshold=threshold)
