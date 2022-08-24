@@ -93,7 +93,7 @@ def cal_rs(contours, g):
     return rs
 
 
-def contour_regression(contours, cell_contours, g, save_dir, degree=40, n_conv=25):
+def contour_regression(contours, cell_contours, g, save_dir, degree=40, n_conv=25, plot=True):
     sorted_c, thetas, ls = xy2theta(contours, g)
     sorted_cell_c, thetas_cell, ls_cell = xy2theta(cell_contours, g)
     
@@ -146,9 +146,10 @@ def contour_regression(contours, cell_contours, g, save_dir, degree=40, n_conv=2
     all_cell_r_padded = np.concatenate((all_cell_r[-20:], all_cell_r, all_cell_r[:20]))
     all_cell_r_mean = np.convolve(all_cell_r_padded, b, mode="same")[20:-20]
     
-    # plot
-    plot_thetas_rs([all_r, all_r_mean], ["reg", "mean"], fig_title="bleb_contours_series", save_dir=save_dir)
-    plot_thetas_rs([all_r_mean, all_cell_r_mean], ["mean", "cell body mean"], fig_title="bleb_cell_contours", save_dir=save_dir)
+    if plot:
+        # plot
+        plot_thetas_rs([all_r, all_r_mean], ["reg", "mean"], fig_title="bleb_contours_series", save_dir=save_dir)
+        plot_thetas_rs([all_r_mean, all_cell_r_mean], ["mean", "cell body mean"], fig_title="bleb_cell_contours", save_dir=save_dir)
     
     return each_r, each_theta, all_r,all_r_mean, each_r_cell, each_theta_cell, all_cell_r, all_cell_r_mean
     

@@ -48,7 +48,7 @@ def slided_again(peaks, argmin, l, bleb_area):
 
 def peaks2ax(peaks, each_r, each_theta, total_length=760):
     """scipy.signal関連のpeaksを座標に変換"""
-    print("peaks", peaks)
+    #print("peaks", peaks)
     r_1, r_2, r_3, r_4 = [], [], [], []
     t_1, t_2, t_3, t_4 = [], [], [], []
     rs = [r_1, r_2, r_3, r_4]
